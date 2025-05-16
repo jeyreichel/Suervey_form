@@ -1,0 +1,17 @@
+@{ViewData["Title"] = "Success";}
+
+<h2>Event Created Successfully</h2>
+
+<div class="alert alert-success">
+    Your event has been created successfully.
+</div>
+
+@if (ViewBag.SubmittedData != null)
+{
+    <h3>Submitted Data:</h3>
+    <pre>@ViewBag.SubmittedData</pre>
+}
+
+<div>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Go to First Page</a>
+</div>

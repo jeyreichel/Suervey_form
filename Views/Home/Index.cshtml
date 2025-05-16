@@ -1,0 +1,159 @@
+﻿@{ViewData["Title"] = "Home Page";}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to SurveyJS Demo</h1>
+    <p>This application demonstrates how to use SurveyJS in an ASP.NET MVC application.</p>
+    
+    <div class="mt-4">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#eventModal">Create New Event</button>
+    </div>
+
+    <div class="modal fade modal-lg" id="eventModal" tabindex="-1" role="dialog" aria-labelledby="eventModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div id="surveyContainer"></div>
+                    <div id="surveyResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link href="https://unpkg.com/survey-core@1.9.116/defaultV2.min.css" rel="stylesheet" />
+    <script src="https://unpkg.com/knockout@3.5.1/build/output/knockout-latest.js"></script>
+    <script src="https://unpkg.com/survey-knockout@1.9.116/survey.ko.min.js"></script>
+    
+    <script>
+        const eventSurveyConfig = {
+            "title": "Edit Event",
+            "completedHtml": "<div style=\"max-width:640px;text-align:center;margin:16px auto;\">\n\n<div style=\"padding:0 24px;\">\n<h4>Check-in complete.</h4>\n<p>Thank you for checking in. Your journey with us is all set. Have a great flight.</p>\n</div>\n\n</div>\n",
+            "pages": [
+                {
+                    "name": "event",
+                    "elements": [
+                        {
+                            "type": "panel",
+                            "name": "event",
+                            "elements": [
+                                {
+                                    "type": "text",
+                                    "name": "Title",
+                                    "title": "Title (shown in the event bar)",
+                                    "isRequired": true,
+                                    "defaultValue": "May event",
+                                    "placeholder": "Enter event title",
+                                    "width": "100%",
+                                    "minWidth": "256px"
+                                },
+                                {
+                                    "type": "comment",
+                                    "name": "Description",
+                                    "title": "Description (shown in the event's Bubble/Tooltip)",
+                                    "placeholder": "Enter description",
+                                    "isRequired": true,
+                                    "width": "100%",
+                                    "minWidth": "256px"
+                                },
+                                {
+                                    "name": "start-date-time",
+                                    "type": "text",
+                                    "title": "Start Date & Time",
+                                    "inputType": "datetime-local",
+                                    "defaultValueExpression": "currentDate()",
+                                    "placeholder": "Select start date and time",
+                                    "isRequired": true,
+                                    "width": "50%",
+                                    "minWidth": "208px"
+                                },
+                                {
+                                    "type": "text",
+                                    "name": "end-date-time",
+                                    "title": "End Date & Time",
+                                    "startWithNewLine": false,
+                                    "inputType": "datetime-local",
+                                    "defaultValueExpression": "currentDate()",
+                                    "placeholder": "Select end date and time",
+                                    "isRequired": true,
+                                    "width": "50%",
+                                    "minWidth": "208px",
+                                },
+                                {
+                                    "type": "dropdown",
+                                    "name": "AssignedTo",
+                                    "title": "Assign event to:",
+                                    "titleLocation": "top",
+                                    "isRequired": true,
+                                    "startWithNewLine": false,
+                                    "placeholder": "Team member or assign in Timesheet",
+                                    "choices": [
+                                        "John Smith",
+                                        "Jane Doe",
+                                        "Alex Johnson",
+                                        "Team A",
+                                        "Team B"
+                                    ],
+                                    "width": "100%",
+                                    "minWidth": "256px"
+                                },
+                            ],
+                            "width": "100%",
+                            "minWidth": "256px"
+                        }
+                    ]
+                }
+            ],
+            "questionErrorLocation": "bottom",
+            "completeText": "OK",
+            "cancelText": "Cancel",
+            "widthMode": "static",
+            "width": "860"
+        };
+        
+        $("#eventModal").on('show.bs.modal', function (e) {
+            const survey = new Survey.Model(eventSurveyConfig);
+
+            survey.onComplete.add(function (sender) {
+                const resultAsString = JSON.stringify(sender.data);
+                const tokenElement = document.querySelector('input[name^="__RequestVerificationToken"]');
+                const token = tokenElement ? tokenElement.value : '';
+                
+                console.log("Sending data:", {
+                    surveyResult: resultAsString,
+                    token: token
+                });
+                
+                const formData = new FormData();
+                formData.append('surveyResult', resultAsString);
+                formData.append('__RequestVerificationToken', token);
+                
+                fetch('@Url.Action("Create", "Home")', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(`Server returned ${response.status}: ${text}`);
+                        });
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    console.log("Success response received");
+                    document.body.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error("Error submitting form:", error);
+                });
+            });
+            
+            try {
+                survey.render("surveyContainer");
+            } catch (error) {
+                console.error("Error rendering survey:", error);
+            }
+        });
+    </script>
+}
