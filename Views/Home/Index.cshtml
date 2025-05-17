@@ -165,6 +165,7 @@
             };
             
             const survey = new Survey.Model(surveyConfig);
+            survey.applyTheme(SurveyTheme.PlainLightPanelless);
             survey.setValue("start-date-time", formatDateForInput(startDateObj));
             survey.setValue("end-date-time", formatDateForInput(endDateObj));
             
