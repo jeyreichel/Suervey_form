@@ -27,11 +27,11 @@
                             <textarea class="form-control" id="description" name="description" placeholder="Enter event description" required></textarea>
                         </div>
                         <div class="row py-2">
-                            <div id="start_date"></div>
+                            <div id="start_date" style="padding: 2px;"></div>
                         </div>
                         <div class="row py-2">
-                            <input type="hidden" id="start" name="start" />
-                            <input type="hidden" id="end" name="end" />
+                            <input type="hidden" id="start" name="start" required/>
+                            <input type="hidden" id="end" name="end" required/>
                         </div>
                         <div class="form-group py-2">
                             <label for="assignedTo" class="form-label" style="font-weight: bold;">Assign event to:</label>
@@ -45,6 +45,7 @@
                             </select>
                         </div>
                     </div>
+                    <div id="errorDetails" class="alert alert-danger" style="display: none;"></div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="resetForm()">Cancel</button>
                         <button type="button" class="btn btn-primary" onclick="submitForm()">Save</button>
@@ -196,14 +197,31 @@
     }
     
     function submitForm() {
-        var id = document.getElementById("id").value;
-        if (id) {
-            document.getElementById("eventForm").action = "/Home/Edit/" + id;
-            document.getElementById("eventForm").submit();
-        } else {
-            document.getElementById("eventForm").action = "/Home/Create";
-            document.getElementById("eventForm").submit();
+        const id = document.getElementById("id").value;
+        const title = document.getElementById("title").value;
+        const description = document.getElementById("description").value;
+        const assignedTo = document.getElementById("assignedTo").value;
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        const errors = [];
+        if (!title) errors.push("Please enter title.");
+        else if (!description) errors.push("Please enter description.");
+        else if (!start) errors.push("Please select start date and time.");
+        else if (!end) errors.push("Please select end date and time.");
+        else if (!assignedTo) errors.push("Please enter assigned to.");
+        else if (startDate > endDate) errors.push("Please select a start and end date and time, and make sure all yards have a value.");
+
+        if (errors.length > 0) {
+            document.getElementById("errorDetails").textContent = errors.join("\n");
+            document.getElementById("errorDetails").style.display = "block";
+            return;
         }
+
+        document.getElementById("eventForm").action = id ? `/Home/Edit/${id}` : "/Home/Create";
+        document.getElementById("eventForm").submit();
     }
 
     function setDeleteId(id) {
@@ -226,8 +244,6 @@
 
     <script>
         const surveyConfig = {
-            "type": "panel",
-            "name": "event",
             "elements": [
                 {
                     "name": "start-date-time",
@@ -239,7 +255,7 @@
                     "isRequired": true,
                     "width": "50%",
                     "minWidth": "256px",
-                    
+                    "padding" : "-20px",
                 },
                 {
                     "type": "text",
@@ -262,6 +278,7 @@
         
         $("#eventModal").on('show.bs.modal', function (e) {
         const survey = new Survey.Model(surveyConfig);
+        survey.applyTheme(SurveyTheme.PlainLightPanelless);
         
         try {
             $("#start_date").Survey({

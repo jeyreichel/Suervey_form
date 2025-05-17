@@ -49,3 +49,10 @@ body {
 .sv-title {
   font-weight: 600;
 }
+
+.sd-body.sd-body--responsive {
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
